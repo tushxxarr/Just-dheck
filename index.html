@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catering Invoice Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .accordion-header {
+            cursor: pointer;
+            user-select: none;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .accordion-content.open {
+            max-height: 1000px; /* A large value to accommodate all content */
+        }
+        .item-card {
+            transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+        }
+        .item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .selected-item {
+            border: 2px solid #10B981; /* Tailwind green-500 */
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+        }
+        /* Custom print styles to ensure only the invoice section is printed */
+        @media print {
+            body > *:not(#invoice-section) {
+                display: none !important;
+            }
+            #invoice-section {
+                display: block !important;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-10 mb-8">
+        <div class="flex flex-col items-center justify-center text-center mb-6">
+            <img src="https://files.catbox.moe/s2aqg3.png" alt="JhaKitchen Catering Services Logo" class="h-24 mb-4">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-indigo-700 mb-1">JhaKitchen Catering Services</h1>
+            <p class="text-gray-500 text-sm">Chalsa, Jalpaiguri, West Bengal, India, Pin Code - 735206</p>
+        </div>
+        <p class="text-center text-gray-500 mb-8">Select items to generate a bill</p>
+
+        <!-- Customer and Bill Info -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 p-4 bg-gray-50 rounded-lg">
+            <div>
+                <label for="customerName" class="block text-sm font-medium text-gray-700">Customer Name</label>
+                <input type="text" id="customerName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="Enter customer name">
+            </div>
+            <div>
+                <label for="customerNumber" class="block text-sm font-medium text-gray-700">Customer Number</label>
+                <input type="text" id="customerNumber" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="e.g., +919876543210">
+            </div>
+            <div>
+                <label for="billDate" class="block text-sm font-medium text-gray-700">Bill Date</label>
+                <input type="date" id="billDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+            </div>
+        </div>
+
+        <!-- Custom Item Addition -->
+        <div class="mb-8 p-4 bg-gray-50 rounded-lg shadow-md">
+            <label for="customItemInput" class="block text-sm font-medium text-gray-700 mb-2">Add Custom Item</label>
+            <div class="flex items-center space-x-2">
+                <input type="text" id="customItemInput" class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="e.g., 'Special Dessert' or 'Extra Ghee'">
+                <button id="addCustomItemBtn" class="px-4 py-2 bg-indigo-500 text-white rounded-md shadow-sm hover:bg-indigo-600 transition-colors">Add</button>
+            </div>
+        </div>
+
+        <!-- Item Selection Sections -->
+        <div id="item-selection" class="space-y-6">
+            <!-- Items will be generated here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Invoice Display Section -->
+    <div id="invoice-section" class="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-10">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Generated Invoice</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="invoice-items" class="bg-white divide-y divide-gray-200">
+                    <!-- Invoice items will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Total and Controls -->
+        <div class="flex flex-col md:flex-row justify-end items-end gap-4 mt-8">
+            <div class="w-full md:w-1/2 p-4 bg-gray-50 rounded-xl shadow-inner">
+                <div class="flex justify-between items-center text-gray-600 mt-2">
+                    <span class="font-semibold text-lg text-gray-700">Quoted Price:</span>
+                    <input type="number" id="quotedPrice" min="0" value="0" class="w-40 text-right rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-1">
+                </div>
+                <div class="flex justify-between items-center text-gray-600 mt-2">
+                    <span>Advance Amount:</span>
+                    <input type="number" id="advanceAmount" min="0" value="0" class="w-40 text-right rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-1">
+                </div>
+                <div class="flex justify-between font-bold text-2xl text-gray-800 mt-4 border-t-2 pt-2 border-gray-300">
+                    <span>Balance Due:</span>
+                    <span id="balanceDue">₹0.00</span>
+                </div>
+            </div>
+            <div class="w-full md:w-1/2 flex flex-col md:items-end gap-4 mt-4 md:mt-0">
+                <button id="clear-bill" class="w-full md:w-auto px-6 py-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-colors">Clear Bill</button>
+                <button id="download-bill" class="w-full md:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-colors">Download Invoice</button>
+                <button id="whatsapp-btn" class="w-full md:w-auto px-6 py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition-colors">Send to WhatsApp</button>
+            </div>
+        </div>
+        <div class="mt-8 text-center text-sm text-gray-500 italic">
+            <p>Digitally Signed</p>
+        </div>
+    </div>
+
+    <script>
+        // Array of all items with mock prices and categories
+        const allItems = {
+            "Puja Items": [
+                { name: "Dhupkati", price: 10 },
+                { name: "Deep", price: 20 },
+                { name: "Gamcha", price: 50 }
+            ],
+            "Modikhana Dukan (Pantry & Grocery)": [
+                { name: "Rice", price: 60 },
+                { name: "Jeera Rice", price: 80 },
+                { name: "Nuniya Aatav Chawal", price: 75 },
+                { name: "Mung Daal", price: 120 },
+                { name: "Mashur Daal", price: 90 },
+                { name: "Chana Daal", price: 110 },
+                { name: "Kalai Daal", price: 130 },
+                { name: "Gota Kalai", price: 140 },
+                { name: "Matar Daal", price: 100 },
+                { name: "Rajma", price: 150 },
+                { name: "Kabuli Chana", price: 160 },
+                { name: "Gota Matar", price: 120 },
+                { name: "Gota Chana", price: 130 },
+                { name: "Arhar Daal", price: 105 },
+                { name: "Sarso Oil", price: 170 },
+                { name: "Refined Oil", price: 150 },
+                { name: "Haldi Powder", price: 80 },
+                { name: "Chilli Powder", price: 95 },
+                { name: "Dhaniya Powder", price: 85 },
+                { name: "Jeera Powder", price: 100 },
+                { name: "Kashmiri Mirch Powder", price: 110 },
+                { name: "Amchoor Masala Powder", price: 70 },
+                { name: "Kadhi Powder", price: 75 },
+                { name: "Gol Mirch Powder", price: 150 },
+                { name: "Everest Meat Masala", price: 60 },
+                { name: "Everest Chicken Masala", price: 60 },
+                { name: "Everest Paneer Masala", price: 60 },
+                { name: "Everest Shahi Garam Masala", price: 60 },
+                { name: "Everest Sabji Masala", price: 60 },
+                { name: "Everest Fish Masala", price: 60 },
+                { name: "Everest Chaat Masala", price: 60 },
+                { name: "Jeera Gota", price: 180 },
+                { name: "Gota Dhaniya", price: 100 },
+                { name: "Panch Foran", price: 90 },
+                { name: "Mouri", price: 120 },
+                { name: "Kala Jeera", price: 150 },
+                { name: "Gota Methi", price: 110 },
+                { name: "Kasturi Methi", price: 130 },
+                { name: "Ajwain Gota", price: 140 },
+                { name: "Radhni Gota", price: 100 },
+                { name: "Sukha Mirch", price: 80 },
+                { name: "Tejpatta", price: 70 },
+                { name: "Hing", price: 200 },
+                { name: "Choti Ilaichi", price: 300 },
+                { name: "Badi Ilaichi", price: 350 },
+                { name: "Long", price: 250 },
+                { name: "Daalchini", price: 200 },
+                { name: "Javitri", price: 400 },
+                { name: "Jai Phal", price: 300 },
+                { name: "White Gol Mirch", price: 280 },
+                { name: "Shahi Jeera", price: 320 },
+                { name: "Star Long", price: 450 },
+                { name: "Posta Dana", price: 500 },
+                { name: "Kala Serso", price: 90 },
+                { name: "Peela Serso", price: 95 },
+                { name: "Ghee", price: 600 },
+                { name: "Butter", price: 50 },
+                { name: "Keshar", price: 1200 },
+                { name: "Milk", price: 30 },
+                { name: "Sugar", price: 50 },
+                { name: "Fryzn Matar", price: 80 },
+                { name: "Aam Sapto", price: 150 },
+                { name: "Emili", price: 70 },
+                { name: "Khejura", price: 100 },
+                { name: "Kaju", price: 800 },
+                { name: "Kismish", price: 500 },
+                { name: "Almond", price: 700 },
+                { name: "Mungfali", price: 120 },
+                { name: "Cherri Phal", price: 180 },
+                { name: "Aanar", price: 150 },
+                { name: "Apple", price: 130 },
+                { name: "Orange Juice", price: 90 },
+                { name: "Gulab Jal", price: 60 },
+                { name: "Amul Fresh Cream", price: 75 },
+                { name: "Magaj Dana", price: 250 },
+                { name: "Coconut Powder", price: 140 },
+                { name: "Coconut Oil", price: 220 },
+                { name: "Soya Sauce", price: 80 },
+                { name: "Tomato Sauce", price: 90 },
+                { name: "Vinegar", price: 65 },
+                { name: "Red Chilli Sauce", price: 85 },
+                { name: "Maida", price: 40 },
+                { name: "Aata", price: 45 },
+                { name: "Baking Powder", price: 55 },
+                { name: "Rice Powder", price: 50 },
+                { name: "Corn Flour Powder", price: 60 },
+                { name: "Suji", price: 48 },
+                { name: "Besan", price: 55 },
+                { name: "Sada Teel", price: 130 },
+                { name: "Daal Bori", price: 100 },
+                { name: "Papad", price: 65 },
+                { name: "Chips", price: 20 },
+                { name: "Ajina Moto", price: 70 },
+                { name: "Tadka Dal", price: 110 },
+                { name: "Namak", price: 25 },
+                { name: "Steel Bar", price: 30 },
+                { name: "Dish Bar", price: 40 },
+                { name: "Plate", price: 15 },
+                { name: "Glass", price: 10 },
+                { name: "Water Bottle", price: 20 },
+                { name: "Napkins", price: 50 },
+                { name: "Hand Wash", price: 80 },
+                { name: "Sweet", price: 300 }
+            ],
+            "Fish Market": [
+                { name: "Katla Fish", price: 250 },
+                { name: "Rahu Fish", price: 280 },
+                { name: "Tengra Fish", price: 350 },
+                { name: "Bata Fish", price: 300 },
+                { name: "Ilish Fish", price: 800 },
+                { name: "Aar Fish", price: 450 },
+                { name: "Pabda Fish", price: 500 },
+                { name: "Chital Fish", price: 600 },
+                { name: "Small Chingri Fish", price: 400 },
+                { name: "Big Chingri Fish", price: 700 },
+                { name: "Desi Chicken", price: 220 },
+                { name: "Poultry Chicken", price: 180 },
+                { name: "Mutton", price: 650 },
+                { name: "Egg", price: 7 }
+            ],
+            "Sabji Market": [
+                { name: "Aalu", price: 30 },
+                { name: "Pyaj", price: 40 },
+                { name: "Lehsun", price: 100 },
+                { name: "Adrak", price: 120 },
+                { name: "Capsicum", price: 80 },
+                { name: "Beans", price: 70 },
+                { name: "Gajar", price: 50 },
+                { name: "Matar Sutti", price: 80 },
+                { name: "Dhaniya Patta", price: 20 },
+                { name: "Phul Gobi", price: 45 },
+                { name: "Bandha Gobi", price: 35 },
+                { name: "Squas", price: 60 },
+                { name: "Papaya", price: 40 },
+                { name: "Sajna", price: 55 },
+                { name: "Pyaj Kali", price: 30 },
+                { name: "Big Baigun", price: 40 },
+                { name: "Small Baigan", price: 50 },
+                { name: "Misti Kumra", price: 30 },
+                { name: "Kacha Kela", price: 25 },
+                { name: "Potal", price: 60 },
+                { name: "Karela", price: 70 },
+                { name: "Kochu", price: 50 },
+                { name: "Poi Saag", price: 35 },
+                { name: "Laal Saag", price: 35 },
+                { name: "Masroom", price: 120 },
+                { name: "Canned Baby Corn", price: 150 },
+                { name: "Paneer", price: 250 }
+            ],
+            "Bartan Items": [
+                { name: "Ett", price: 8 },
+                { name: "Big Oven", price: 5000 },
+                { name: "Small Oven", price: 3500 },
+                { name: "Big Kadahi", price: 800 },
+                { name: "Small Kadahi", price: 500 },
+                { name: "Bol Gamla", price: 120 },
+                { name: "Net Gamla", price: 90 },
+                { name: "Parat", price: 150 },
+                { name: "Jag", price: 200 },
+                { name: "Deg with Dhakkan", price: 1500 },
+                { name: "Steel Gamla", price: 180 },
+                { name: "Baltin", price: 100 },
+                { name: "Steel Tray", price: 250 },
+                { name: "Hata", price: 60 },
+                { name: "Pani Drum", price: 1200 }
+            ]
+        };
+
+        let selectedItems = [];
+
+        // Function to render the item selection UI
+        function renderItemSelection() {
+            const itemSelectionDiv = document.getElementById('item-selection');
+            itemSelectionDiv.innerHTML = ''; // Clear previous content
+
+            for (const category in allItems) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.classList.add('bg-white', 'p-6', 'rounded-xl', 'shadow-lg');
+
+                const header = document.createElement('div');
+                header.classList.add('accordion-header', 'flex', 'justify-between', 'items-center', 'font-bold', 'text-xl', 'text-gray-800', 'mb-4');
+                header.innerHTML = `<span>${category}</span><span class="transform transition-transform duration-300">▼</span>`;
+                categoryDiv.appendChild(header);
+
+                const content = document.createElement('div');
+                content.classList.add('accordion-content', 'grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-4', 'lg:grid-cols-5', 'gap-4', 'p-2');
+                categoryDiv.appendChild(content);
+
+                header.onclick = function() {
+                    content.classList.toggle('open');
+                    header.querySelector('span:last-child').classList.toggle('rotate-180');
+                };
+
+                allItems[category].forEach(item => {
+                    const itemCard = document.createElement('div');
+                    itemCard.classList.add('item-card', 'bg-gray-100', 'rounded-lg', 'p-4', 'text-center', 'cursor-pointer', 'shadow-sm', 'hover:bg-indigo-100');
+                    itemCard.innerHTML = `<p class="font-semibold text-sm md:text-base">${item.name}</p>`;
+                    if (selectedItems.some(i => i.name === item.name)) {
+                        itemCard.classList.add('selected-item');
+                    }
+                    itemCard.onclick = () => addItemToInvoice(item);
+                    content.appendChild(itemCard);
+                });
+
+                itemSelectionDiv.appendChild(categoryDiv);
+            }
+        }
+
+        // Function to add an item to the invoice
+        function addItemToInvoice(item) {
+            const existingItem = selectedItems.find(i => i.name === item.name);
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                selectedItems.push({ ...item, quantity: 1 });
+            }
+            renderInvoice();
+            renderItemSelection(); // Re-render to show selection
+        }
+
+        // Function to render the invoice table
+        function renderInvoice() {
+            const invoiceBody = document.getElementById('invoice-items');
+            invoiceBody.innerHTML = '';
+
+            selectedItems.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.name}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <input type="number" min="1" value="${item.quantity}" class="quantity-input w-16 text-center border-gray-300 rounded-md" data-index="${index}">
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button class="remove-btn text-red-600 hover:text-red-900 font-semibold" data-index="${index}">Remove</button>
+                    </td>
+                `;
+                invoiceBody.appendChild(row);
+            });
+            updateTotals();
+        }
+
+        // Function to update the final totals
+        function updateTotals() {
+            const quotedPriceInput = document.getElementById('quotedPrice');
+            const advanceAmountInput = document.getElementById('advanceAmount');
+
+            const quotedPrice = parseFloat(quotedPriceInput.value) || 0;
+            const advanceAmount = parseFloat(advanceAmountInput.value) || 0;
+
+            const balanceDue = quotedPrice - advanceAmount;
+
+            document.getElementById('balanceDue').textContent = `₹${balanceDue.toFixed(2)}`;
+        }
+
+        // Event listener for quantity change and remove button clicks
+        document.getElementById('invoice-items').addEventListener('change', (e) => {
+            if (e.target.classList.contains('quantity-input')) {
+                const index = e.target.dataset.index;
+                const newQuantity = parseInt(e.target.value);
+                if (newQuantity >= 1) {
+                    selectedItems[index].quantity = newQuantity;
+                    renderInvoice();
+                }
+            }
+        });
+
+        document.getElementById('invoice-items').addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-btn')) {
+                const index = e.target.dataset.index;
+                selectedItems.splice(index, 1);
+                renderInvoice();
+                renderItemSelection(); // Re-render to remove selection highlight
+            }
+        });
+        
+        // Event listeners for quoted price and advance amount inputs
+        document.getElementById('quotedPrice').addEventListener('input', updateTotals);
+        document.getElementById('advanceAmount').addEventListener('input', updateTotals);
+
+        // Clear and Download buttons
+        document.getElementById('clear-bill').addEventListener('click', () => {
+            selectedItems = [];
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerNumber').value = '';
+            document.getElementById('billDate').value = '';
+            document.getElementById('quotedPrice').value = '0';
+            document.getElementById('advanceAmount').value = '0';
+            renderInvoice();
+            renderItemSelection(); // Clear all selection highlights
+        });
+
+        // Function to generate and download the invoice as a text file
+        document.getElementById('download-bill').addEventListener('click', () => {
+            const customerName = document.getElementById('customerName').value || 'N/A';
+            const customerNumber = document.getElementById('customerNumber').value || 'N/A';
+            const billDate = document.getElementById('billDate').value || 'N/A';
+            const quotedPrice = document.getElementById('quotedPrice').value || '0';
+            const advanceAmount = document.getElementById('advanceAmount').value || '0';
+            const balanceDue = parseFloat(quotedPrice) - parseFloat(advanceAmount);
+
+            let invoiceContent = "JhaKitchen Catering Services\n";
+            invoiceContent += "Chalsa, Jalpaiguri, West Bengal, India, Pin Code - 735206\n\n";
+            invoiceContent += "--------------------------------------\n";
+            invoiceContent += "Catering Invoice\n";
+            invoiceContent += "--------------------------------------\n\n";
+            invoiceContent += `Customer Name: ${customerName}\n`;
+            invoiceContent += `Customer Number: ${customerNumber}\n`;
+            invoiceContent += `Bill Date: ${billDate}\n\n`;
+            invoiceContent += "--- Items Required ---\n";
+
+            selectedItems.forEach(item => {
+                invoiceContent += `${item.name} (Qty: ${item.quantity})\n`;
+            });
+            
+            invoiceContent += "\n--- Quote Summary ---\n";
+            invoiceContent += `Quoted Price: ₹${parseFloat(quotedPrice).toFixed(2)}\n`;
+            invoiceContent += `Advance Paid: ₹${parseFloat(advanceAmount).toFixed(2)}\n`;
+            invoiceContent += `Balance Due: ₹${balanceDue.toFixed(2)}\n\n`;
+            invoiceContent += "Digitally Signed";
+
+            const blob = new Blob([invoiceContent], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `JhaKitchen_Invoice_${customerName.replace(/\s/g, '_')}_${billDate}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Function to send invoice via WhatsApp
+        document.getElementById('whatsapp-btn').addEventListener('click', () => {
+            const customerNumber = document.getElementById('customerNumber').value;
+            if (!customerNumber) {
+                alert('Please enter a customer number to send the invoice.');
+                return;
+            }
+
+            const customerName = document.getElementById('customerName').value || 'Customer';
+            const billDate = document.getElementById('billDate').value || 'N/A';
+            const quotedPrice = document.getElementById('quotedPrice').value || '0';
+            const advanceAmount = document.getElementById('advanceAmount').value || '0';
+            const balanceDue = parseFloat(quotedPrice) - parseFloat(advanceAmount);
+
+            let message = `Hello ${customerName},\n\n`;
+            message += `Here is your catering invoice from JhaKitchen Catering Services for the event on ${billDate}.\n\n`;
+            message += `*Items Required:*\n`;
+            selectedItems.forEach(item => {
+                message += `- ${item.name} (Qty: ${item.quantity})\n`;
+            });
+            message += `\n*Invoice Summary:*\n`;
+            message += `Total Quoted Price: ₹${parseFloat(quotedPrice).toFixed(2)}\n`;
+            message += `Advance Paid: ₹${parseFloat(advanceAmount).toFixed(2)}\n`;
+            message += `Balance Due: ₹${balanceDue.toFixed(2)}\n\n`;
+            message += "Thank you for choosing us!\nDigitally Signed - JhaKitchen Catering Services";
+            
+            const whatsappLink = `https://wa.me/${customerNumber}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappLink, '_blank');
+        });
+
+        // Function to add a custom item
+        document.getElementById('addCustomItemBtn').addEventListener('click', () => {
+            const customItemName = document.getElementById('customItemInput').value.trim();
+            if (customItemName) {
+                addItemToInvoice({ name: customItemName, price: 0 });
+                document.getElementById('customItemInput').value = ''; // Clear the input field
+            }
+        });
+
+        // Initial render
+        document.addEventListener('DOMContentLoaded', () => {
+            renderItemSelection();
+            renderInvoice();
+        });
+    </script>
+</body>
+</html>
