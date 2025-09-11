@@ -162,11 +162,60 @@
         // --- INITIAL DATA & STATE ---
         let allItems = {};
         const defaultItems = {
-            "Puja Items": [{ name: "Dhupkati"}, { name: "Deep"}, { name: "Gamcha"}],
-            "Modikhana Dukan (Pantry & Grocery)": [{ name: "Rice"}, { name: "Jeera Rice"}, { name: "Nuniya Aatav Chawal"}, { name: "Mung Daal"}, { name: "Mashur Daal"}, { name: "Chana Daal"}, { name: "Kalai Daal"}, { name: "Rajma"}, { name: "Sarso Oil"}, { name: "Refined Oil"}, { name: "Haldi Powder"}, { name: "Chilli Powder"}, { name: "Dhaniya Powder"}, { name: "Jeera Powder"}, { name: "Kashmiri Mirch Powder"}, { name: "Panch Foran"}, { name: "Jeera Gota"}, { name: "Gota Dhaniya"}, { name: "Radhuni Gota"}, { name: "Sukha Mirch"}, { name: "Tejpatta"}, { name: "Choti Ilaichi"}, { name: "Long"}, { name: "Daalchini"}, { name: "Jai Phal"}, { name: "Ghee"}, { name: "Butter"}, { name: "Aam Sapto"}, { name: "Khejura"}, { name: "Kaju"}, { name: "Kismish"}, { name: "Orange Squash"}, { name: "Gulab Jal"}, { name: "Salt"}, { name: "Kashmiri Laal Mirch"}, { name: "Kasturi Methi"}, { name: "Coconut Powder"}, { name: "Amul Fresh Cream"}, { name: "Paneer"}, { name: "Liquid Motor"}, { name: "Aata"}, { name: "Maida"}, { name: "Baking Powder"}, { name: "Rice Powder"}, { name: "Corn Flour"}, { name: "Besan"}, { name: "Suji"}, { name: "Ajwain"}],
-            "Fish Market": [{ name: "Katla Fish"}, { name: "Rui Fish"}, { name: "Tengra Fish"}, { name: "Aar Fish"}, { name: "Pabda Fish"}, { name: "Chital Fish"}, { name: "Small Chingri Fish"}, { name: "Big Chingri Fish"}, { name: "Desi Chicken"}, { name: "Poultry Chicken"}, { name: "Mutton"}, { name: "Egg"}],
-            "Sabji Market": [{ name: "Potato"}, { name: "Onion"}, { name: "Aada"}, { name: "Rasoon"}, { name: "Fulkobi"}, { name: "Badhakobi"}, { name: "Potol"}, { name: "Pathal"}, { name: "Bins"}, { name: "Tomato"}, { name: "Begun"}, { name: "Capsicum"}, { name: "Sosah/China"}, { name: "Squash"}, { name: "Pui"}, { name: "Bhindi"}, { name: "Ocha Loata"}, { name: "Lal Saag"}, { name: "Lamba Saag"}, { name: "Misti Kumra"}, { name: "Kochu"}, { name: "Matar Suti"}, { name: "Lemon/Lebu"}],
-            "Bartan Items": [{ name: "Big Oven"}, { name: "Small Oven"}, { name: "Big Kadahi"}, { name: "Small Kadahi"}, { name: "Jag"}, { name: "Steel Tray"}]
+            "Puja Items": [
+                { name: "DHUPKATI" }, 
+                { name: "DEEP" }, 
+                { name: "GAMCHA" }
+            ],
+            "Modikhana Dukan": [
+                { name: "RICE" }, { name: "JEERA RICE" }, { name: "NUNIYA AATAV CHAWAL" }, { name: "MUNG DAAL" }, 
+                { name: "MASHUR DAAL" }, { name: "CHANA DAAL" }, { name: "KALAI DAAL" }, { name: "GOTA KALAI" }, 
+                { name: "MATAR DAAL" }, { name: "RAJMA" }, { name: "KABULI CHANA" }, { name: "GOTA MATAR" }, 
+                { name: "GOTA CHANA" }, { name: "ARHAR DAAL" }, { name: "SARSO OIL" }, { name: "REFINED OIL" }, 
+                { name: "HALDI POWDER" }, { name: "CHILLI POWDER" }, { name: "DHANIYA POWDER" }, { name: "JEERA POWDER" }, 
+                { name: "KASHMIRI MIRCH POWDER" }, { name: "AMCHOOR MASALA POWDER" }, { name: "KADHI POWDER" }, 
+                { name: "GOL MIRCH POWDER" }, { name: "EVEREST MEAT MASALA" }, { name: "EVEREST CHICKEN MASALA" }, 
+                { name: "EVEREST PANEER MASALA" }, { name: "EVEREST SHAHI GARAM MASALA" }, { name: "EVEREST SABJI MASALA" }, 
+                { name: "EVEREST FISH MASALA" }, { name: "EVEREST CHAAT MASALA" }, { name: "JEERA GOTA" }, 
+                { name: "GOTA DHANIYA" }, { name: "PANCH FORAN" }, { name: "MOURI" }, { name: "KALA JEERA" }, 
+                { name: "GOTA METHI" }, { name: "KASTURI METHI" }, { name: "AJWAIN GOTA" }, { name: "RADHNI GOTA" }, 
+                { name: "SUKHA MIRCH" }, { name: "TEJPATTA" }, { name: "HING" }, { name: "CHOTI ILAICHI" }, 
+                { name: "BADI ILAICHI" }, { name: "LONG" }, { name: "DAALCHINI" }, { name: "JAVITRI" }, 
+                { name: "JAI PHAL" }, { name: "WHITE GOL MIRCH" }, { name: "SHAHI JEERA" }, { name: "STAR LONG" }, 
+                { name: "POSTA DANA" }, { name: "KALA SERSO" }, { name: "PEELA SERSO" }, { name: "GHEE" }, 
+                { name: "BUTTER" }, { name: "KESHAR" }, { name: "MILK" }, { name: "SUGAR" }, { name: "FRYZN MATAR" }, 
+                { name: "AAM SAPTO" }, { name: "EMLI" }, { name: "KHEJUR" }, { name: "KAJU" }, { name: "KISMISH" }, 
+                { name: "ALMOND" }, { name: "MUNGFALI" }, { name: "CHERRI PHAL" }, { name: "AANAR" }, { name: "APPLE" }, 
+                { name: "ORENGE JUICE" }, { name: "GULAB JAL" }, { name: "AMUL FRESH CREAM" }, { name: "MAGAJ DANA" }, 
+                { name: "COCONUT POWDER" }, { name: "COCONUT OIL" }, { name: "SOYA SAUCE" }, { name: "TOMATO SAUCE" }, 
+                { name: "VINIGER" }, { name: "RED CHILLI SAUCE" }, { name: "MAIDA" }, { name: "AATA" }, 
+                { name: "BAKING POWDER" }, { name: "RICE POWDER" }, { name: "CORN FLOUR POWDER" }, { name: "SUJI" }, 
+                { name: "BESAN" }, { name: "SADA TEEL" }, { name: "DAAL BORI" }, { name: "PAPAD" }, { name: "CHIPS" }, 
+                { name: "AJINA MOTO" }, { name: "TADKA DAL" }, { name: "NAMAK" }, { name: "STEEL BAR" }, 
+                { name: "DISH BAR" }, { name: "PLATE" }, { name: "GLASS" }, { name: "WATER BOTTLE" }, 
+                { name: "NAPKINS" }, { name: "HAND WASH" }
+            ],
+            "Fish Market": [
+                { name: "KATLA FISH" }, { name: "RAHU FISH" }, { name: "TENGRA FISH" }, { name: "BATA FISH" }, 
+                { name: "ILISH FISH" }, { name: "AAR FISH" }, { name: "PABDA FISH" }, { name: "CHITAL FISH" }, 
+                { name: "SMALL CHINGRI FISH" }, { name: "BIG CHINGRI FISH" }, { name: "DESI CHICKEN" }, 
+                { name: "POULTRY CHICKEN" }, { name: "MUTTON" }, { name: "EGG" }
+            ],
+            "Sabji Market": [
+                { name: "AALU" }, { name: "PYAJ" }, { name: "LEHSUN" }, { name: "ADRAK" }, { name: "CAPCICUM" }, 
+                { name: "BEANS" }, { name: "GAJAR" }, { name: "MATAR SUTTI" }, { name: "DHANIYA PATTA" }, 
+                { name: "PHUL GOBI" }, { name: "BANDHA GOBI" }, { name: "SQUAS" }, { name: "PAPAYA" }, 
+                { name: "SAJNA" }, { name: "PYAJ KALI" }, { name: "BIG BAIGUN" }, { name: "SMALL BAIGAN" }, 
+                { name: "MISTI KUMRA" }, { name: "KACHA KELA" }, { name: "POTAL" }, { name: "KARELA" }, 
+                { name: "KOCHU" }, { name: "POI SAAG" }, { name: "LAAL SAAG" }, { name: "MASROOM" }, 
+                { name: "CANNED BABY CORN" }, { name: "PANEER" }, { name: "SWEET" }
+            ],
+            "Bartan Items": [
+                { name: "ETT" }, { name: "BIG OVEN" }, { name: "SMALL OVEN" }, { name: "BIG KADAHI" }, 
+                { name: "SMALL KADAHI" }, { name: "BOL GAMLA" }, { name: "NET GAMLA" }, { name: "PARAT" }, 
+                { name: "JAG" }, { name: "DEG WITH DHAKKAN" }, { name: "STEEL GAMLA" }, { name: "BALTIN" }, 
+                { name: "STEEL TRAY" }, { name: "HATA" }, { name: "PANI DRUM" }
+            ]
         };
         let selectedItems = [];
         let accordionStates = {}; // Object to store the open/closed state of accordions
