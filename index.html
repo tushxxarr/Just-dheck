@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catering Invoice Generator</title>
+    <title>JhaKitchen Pro - Invoice Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- jsPDF for PDF generation -->
+    <!-- jsPDF Library for PDF Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body {
@@ -15,102 +15,68 @@
             background-color: #f3f4f6;
             color: #374151;
         }
-        .accordion-header {
-            cursor: pointer;
-            user-select: none;
-        }
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-in-out;
-        }
-        .accordion-content.open {
-            max-height: 2000px; /* Increased max-height to fit all content */
-        }
-        .item-card {
-            transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
-        }
-        .item-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+        .accordion-header { cursor: pointer; user-select: none; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; }
+        .accordion-content.open { max-height: 1500px; }
+        .item-card { transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out, background-color 0.2s, border-color 0.2s; }
+        .item-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
         .selected-item {
-            border: 2px solid #10B981; /* Tailwind green-500 */
-            background-color: #E6F9F1;
-            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+            border: 2px solid #10B981 !important; /* Green border */
+            background-color: #ffffff;  /* White background to stand out */
         }
-        /* Modal styles */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.5);
-            -webkit-backdrop-filter: blur(5px);
-            backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 12px;
-        }
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 24px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 12px; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div class="max-w-7xl mx-auto">
-        <!-- Main Application Card -->
-        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 mb-8">
-            <div class="flex flex-col items-center justify-center text-center mb-6">
+    <div class="max-w-7xl mx-auto space-y-8">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10">
+            <div class="flex flex-col items-center justify-center text-center">
                 <img src="https://files.catbox.moe/s2aqg3.png" alt="JhaKitchen Catering Services Logo" class="h-24 mb-4">
                 <h1 class="text-4xl md:text-5xl font-extrabold text-indigo-700 mb-1">JhaKitchen Catering Services</h1>
                 <p class="text-gray-500 text-sm">Chalsa, Jalpaiguri, West Bengal, India, Pin Code - 735206</p>
             </div>
-            <p class="text-center text-gray-500 mb-8">Select items to generate a bill</p>
+        </div>
 
+        <!-- Main App Body -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10">
+            <p class="text-center text-gray-600 mb-8 font-semibold text-lg">Select items to generate a bill</p>
+            
             <!-- Customer and Bill Info -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 p-4 bg-gray-50 rounded-lg">
-                <input type="hidden" id="invoiceId">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 p-6 bg-gray-50 rounded-xl border">
                 <div>
                     <label for="customerName" class="block text-sm font-medium text-gray-700">Customer Name</label>
                     <input type="text" id="customerName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="Enter customer name">
                 </div>
                 <div>
                     <label for="customerNumber" class="block text-sm font-medium text-gray-700">Customer Number</label>
-                    <div class="flex items-center mt-1">
-                        <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">+91</span>
-                        <input type="text" id="customerNumber" class="block w-full rounded-r-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="9876543210">
-                    </div>
+                    <input type="text" id="customerNumber" value="+91" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="+919876543210">
                 </div>
                 <div>
                     <label for="billDate" class="block text-sm font-medium text-gray-700">Bill Date</label>
                     <input type="date" id="billDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
                 </div>
+                 <input type="hidden" id="invoiceId" value="">
             </div>
-
+            
             <!-- Item Selection Sections -->
-            <div id="item-selection" class="space-y-6">
+            <div id="item-selection" class="space-y-6 mb-8">
                 <!-- Items will be generated here by JavaScript -->
             </div>
         </div>
 
         <!-- Invoice Display Section -->
-        <div id="invoice-section" class="bg-white rounded-2xl shadow-xl p-6 md:p-10 mb-8">
+        <div id="invoice-section" class="bg-white rounded-2xl shadow-xl p-6 md:p-10">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Generated Invoice</h2>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity / Details</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -121,495 +87,531 @@
             </div>
 
             <!-- Total and Controls -->
-            <div class="flex flex-col md:flex-row justify-end items-end gap-4 mt-8">
-                <div class="w-full md:w-1/2 p-4 bg-gray-50 rounded-xl shadow-inner">
-                    <div class="flex justify-between items-center text-gray-600 mt-2">
-                        <span class="font-semibold text-lg text-gray-700">Quoted Price:</span>
-                        <input type="number" id="quotedPrice" min="0" value="0" class="w-40 text-right rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-1">
-                    </div>
-                    <div class="flex justify-between items-center text-gray-600 mt-2">
-                        <span>Advance Amount:</span>
-                        <input type="number" id="advanceAmount" min="0" value="0" class="w-40 text-right rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-1">
-                    </div>
-                    <div class="flex justify-between font-bold text-2xl text-gray-800 mt-4 border-t-2 pt-2 border-gray-300">
-                        <span>Balance Due:</span>
-                        <span id="balanceDue">₹0.00</span>
+            <div class="flex flex-col md:flex-row justify-between items-start gap-8 mt-8">
+                <div class="w-full md:w-auto">
+                    <!-- Digital Signature -->
+                    <div id="signature-block" class="p-4 border border-gray-200 rounded-lg bg-gray-50 flex items-center space-x-4">
+                        <svg class="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <p class="font-bold text-green-600">Signature Valid</p>
+                            <p class="text-xs text-gray-500">Digitally signed by JhaKitchen</p>
+                            <p class="text-xs text-gray-500" id="signature-date">Date: </p>
+                        </div>
                     </div>
                 </div>
-                <div class="w-full md:w-1/2 flex flex-col md:items-end gap-4 mt-4 md:mt-0">
-                    <button id="clear-bill" class="w-full md:w-auto px-6 py-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-colors">Clear Bill</button>
-                    <button id="save-invoice" class="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors">Save Invoice</button>
-                    <button id="download-pdf" class="w-full md:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-colors">Download PDF</button>
-                    <button id="whatsapp-btn" class="w-full md:w-auto px-6 py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition-colors">Send to WhatsApp</button>
+
+                <div class="w-full md:w-1/2">
+                    <div class="p-4 bg-gray-50 rounded-xl shadow-inner border">
+                        <div class="flex justify-between items-center text-gray-600 mt-2">
+                            <span class="font-semibold text-lg text-gray-700">Quoted Price:</span>
+                            <input type="number" id="quotedPrice" min="0" value="0" class="w-40 text-right rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-1">
+                        </div>
+                        <div class="flex justify-between items-center text-gray-600 mt-2">
+                            <span>Advance Amount:</span>
+                            <input type="number" id="advanceAmount" min="0" value="0" class="w-40 text-right rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-1">
+                        </div>
+                        <div class="flex justify-between font-bold text-2xl text-gray-800 mt-4 border-t-2 pt-2 border-gray-300">
+                            <span>Balance Due:</span>
+                            <span id="balanceDue">₹0.00</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-             <!-- Digital Signature -->
-            <div class="mt-8 flex justify-end">
-                <div class="border p-4 rounded-lg flex items-center space-x-4 max-w-sm">
-                    <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <div>
-                        <p class="font-bold text-lg text-green-600">Signature Valid</p>
-                        <p class="text-sm text-gray-500">Digitally signed by JhaKitchen</p>
-                        <p class="text-xs text-gray-400" id="signatureDate">Date: </p>
-                    </div>
-                </div>
+
+             <!-- Action Buttons -->
+            <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button id="save-bill" class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors font-semibold">Save Invoice</button>
+                <button id="download-bill" class="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-colors font-semibold">Download PDF</button>
+                <button id="whatsapp-btn" class="w-full px-6 py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition-colors font-semibold">Send via WhatsApp</button>
+                <button id="clear-bill" class="w-full px-6 py-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-colors font-semibold">Clear Current Bill</button>
             </div>
         </div>
 
-        <!-- Saved Invoices Section -->
+         <!-- Saved Invoices Section -->
         <div id="saved-invoices-section" class="bg-white rounded-2xl shadow-xl p-6 md:p-10">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Saved Invoices</h2>
-            <div id="saved-invoices-list" class="space-y-4">
-                <!-- Saved invoices will be dynamically added here -->
+            <div id="saved-invoices-list" class="overflow-x-auto">
+                <!-- Saved invoices will be listed here -->
             </div>
         </div>
     </div>
-    
-    <!-- Add New Item Modal -->
+
+    <!-- Modal for adding new permanent items -->
     <div id="addItemModal" class="modal">
         <div class="modal-content">
-            <h3 class="text-2xl font-bold mb-4">Add New Item</h3>
-            <input type="hidden" id="modalCategory">
+            <h3 class="text-lg font-bold mb-4">Add New Item to <span id="modalCategoryName"></span></h3>
+            <input type="hidden" id="modalCategoryKey">
             <div>
                 <label for="newItemName" class="block text-sm font-medium text-gray-700">Item Name</label>
-                <input type="text" id="newItemName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="Enter new item name">
+                <input type="text" id="newItemName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" placeholder="e.g., Paneer Butter Masala">
+            </div>
+            <div class="mt-4">
+                <label for="newItemPrice" class="block text-sm font-medium text-gray-700">Price (Optional)</label>
+                <input type="number" id="newItemPrice" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" placeholder="e.g., 250">
             </div>
             <div class="mt-6 flex justify-end space-x-3">
-                <button id="cancelAddItem" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancel</button>
-                <button id="confirmAddItem" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Add Item</button>
+                <button id="closeModalBtn" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancel</button>
+                <button id="saveNewItemBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Save Item</button>
             </div>
         </div>
     </div>
 
-
     <script>
-        const { jsPDF } = window.jspdf;
-        
-        // --- DATA MANAGEMENT ---
-
+        // --- INITIAL DATA & STATE ---
         let allItems = {};
-        let selectedItems = [];
-        let savedInvoices = [];
-        let accordionStates = {};
-
         const defaultItems = {
-            "Puja Items": [{ name: "Dhupkati" }, { name: "Deep" }, { name: "Gamcha" }],
-            "Modikhana Dukan (Pantry & Grocery)": [{ name: "Rice" }, { name: "Jeera Rice" }, { name: "Nuniya Aatav Chawal" }, { name: "Mung Daal" }, { name: "Mashur Daal" }, { name: "Chana Daal" }, { name: "Kalai Daal" }, { name: "Gota Kalai" }, { name: "Matar Daal" }, { name: "Rajma" }, { name: "Kabuli Chana" }, { name: "Gota Matar" }, { name: "Gota Chana" }, { name: "Arhar Daal" }, { name: "Sarso Oil" }, { name: "Refined Oil" }, { name: "Haldi Powder" }, { name: "Chilli Powder" }, { name: "Dhaniya Powder" }, { name: "Jeera Powder" }, { name: "Kashmiri Mirch Powder" }, { name: "Amchoor Masala Powder" }, { name: "Kadhi Powder" }, { name: "Gol Mirch Powder" }, { name: "Everest Meat Masala" }, { name: "Everest Chicken Masala" }, { name: "Everest Paneer Masala" }, { name: "Everest Shahi Garam Masala" }, { name: "Everest Sabji Masala" }, { name: "Everest Fish Masala" }, { name: "Everest Chaat Masala" }, { name: "Jeera Gota" }, { name: "Gota Dhaniya" }, { name: "Panch Foran" }, { name: "Mouri" }, { name: "Kala Jeera" }, { name: "Gota Methi" }, { name: "Kasturi Methi" }, { name: "Ajwain Gota" }, { name: "Radhni Gota" }, { name: "Sukha Mirch" }, { name: "Tejpatta" }, { name: "Hing" }, { name: "Choti Ilaichi" }, { name: "Badi Ilaichi" }, { name: "Long" }, { name: "Daalchini" }, { name: "Javitri" }, { name: "Jai Phal" }, { name: "White Gol Mirch" }, { name: "Shahi Jeera" }, { name: "Star Long" }, { name: "Posta Dana" }, { name: "Kala Serso" }, { name: "Peela Serso" }, { name: "Ghee" }, { name: "Butter" }, { name: "Keshar" }, { name: "Milk" }, { name: "Sugar" }, { name: "Fryzn Matar" }, { name: "Aam Sapto" }, { name: "Emili" }, { name: "Khejura" }, { name: "Kaju" }, { name: "Kismish" }, { name: "Almond" }, { name: "Mungfali" }, { name: "Cherri Phal" }, { name: "Aanar" }, { name: "Apple" }, { name: "Orange Juice" }, { name: "Gulab Jal" }, { name: "Amul Fresh Cream" }, { name: "Magaj Dana" }, { name: "Coconut Powder" }, { name: "Coconut Oil" }, { name: "Soya Sauce" }, { name: "Tomato Sauce" }, { name: "Vinegar" }, { name: "Red Chilli Sauce" }, { name: "Maida" }, { name: "Aata" }, { name: "Baking Powder" }, { name: "Rice Powder" }, { name: "Corn Flour Powder" }, { name: "Suji" }, { name: "Besan" }, { name: "Sada Teel" }, { name: "Daal Bori" }, { name: "Papad" }, { name: "Chips" }, { name: "Ajina Moto" }, { name: "Tadka Dal" }, { name: "Namak" }, { name: "Steel Bar" }, { name: "Dish Bar" }, { name: "Plate" }, { name: "Glass" }, { name: "Water Bottle" }, { name: "Napkins" }, { name: "Hand Wash" }, { name: "Sweet" }],
-            "Fish Market": [{ name: "Katla Fish" }, { name: "Rahu Fish" }, { name: "Tengra Fish" }, { name: "Bata Fish" }, { name: "Ilish Fish" }, { name: "Aar Fish" }, { name: "Pabda Fish" }, { name: "Chital Fish" }, { name: "Small Chingri Fish" }, { name: "Big Chingri Fish" }, { name: "Desi Chicken" }, { name: "Poultry Chicken" }, { name: "Mutton" }, { name: "Egg" }],
-            "Sabji Market": [{ name: "Aalu" }, { name: "Pyaj" }, { name: "Lehsun" }, { name: "Adrak" }, { name: "Capsicum" }, { name: "Beans" }, { name: "Gajar" }, { name: "Matar Sutti" }, { name: "Dhaniya Patta" }, { name: "Phul Gobi" }, { name: "Bandha Gobi" }, { name: "Squas" }, { name: "Papaya" }, { name: "Sajna" }, { name: "Pyaj Kali" }, { name: "Big Baigun" }, { name: "Small Baigan" }, { name: "Misti Kumra" }, { name: "Kacha Kela" }, { name: "Potal" }, { name: "Karela" }, { name: "Kochu" }, { name: "Poi Saag" }, { name: "Laal Saag" }, { name: "Masroom" }, { name: "Canned Baby Corn" }, { name: "Paneer" }],
-            "Bartan Items": [{ name: "Ett" }, { name: "Big Oven" }, { name: "Small Oven" }, { name: "Big Kadahi" }, { name: "Small Kadahi" }, { name: "Bol Gamla" }, { name: "Net Gamla" }, { name: "Parat" }, { name: "Jag" }, { name: "Deg with Dhakkan" }, { name: "Steel Gamla" }, { name: "Baltin" }, { name: "Steel Tray" }, { name: "Hata" }, { name: "Pani Drum" }]
+            "Puja Items": [{ name: "Dhupkati"}, { name: "Deep"}, { name: "Gamcha"}],
+            "Modikhana Dukan (Pantry & Grocery)": [{ name: "Rice"}, { name: "Jeera Rice"}, { name: "Nuniya Aatav Chawal"}, { name: "Mung Daal"}, { name: "Mashur Daal"}, { name: "Chana Daal"}, { name: "Kalai Daal"}, { name: "Rajma"}, { name: "Sarso Oil"}, { name: "Refined Oil"}, { name: "Haldi Powder"}, { name: "Chilli Powder"}, { name: "Dhaniya Powder"}, { name: "Jeera Powder"}, { name: "Kashmiri Mirch Powder"}, { name: "Panch Foran"}, { name: "Jeera Gota"}, { name: "Gota Dhaniya"}, { name: "Radhuni Gota"}, { name: "Sukha Mirch"}, { name: "Tejpatta"}, { name: "Choti Ilaichi"}, { name: "Long"}, { name: "Daalchini"}, { name: "Jai Phal"}, { name: "Ghee"}, { name: "Butter"}, { name: "Aam Sapto"}, { name: "Khejura"}, { name: "Kaju"}, { name: "Kismish"}, { name: "Orange Squash"}, { name: "Gulab Jal"}, { name: "Salt"}, { name: "Kashmiri Laal Mirch"}, { name: "Kasturi Methi"}, { name: "Coconut Powder"}, { name: "Amul Fresh Cream"}, { name: "Paneer"}, { name: "Liquid Motor"}, { name: "Aata"}, { name: "Maida"}, { name: "Baking Powder"}, { name: "Rice Powder"}, { name: "Corn Flour"}, { name: "Besan"}, { name: "Suji"}, { name: "Ajwain"}],
+            "Fish Market": [{ name: "Katla Fish"}, { name: "Rui Fish"}, { name: "Tengra Fish"}, { name: "Aar Fish"}, { name: "Pabda Fish"}, { name: "Chital Fish"}, { name: "Small Chingri Fish"}, { name: "Big Chingri Fish"}, { name: "Desi Chicken"}, { name: "Poultry Chicken"}, { name: "Mutton"}, { name: "Egg"}],
+            "Sabji Market": [{ name: "Potato"}, { name: "Onion"}, { name: "Aada"}, { name: "Rasoon"}, { name: "Fulkobi"}, { name: "Badhakobi"}, { name: "Potol"}, { name: "Pathal"}, { name: "Bins"}, { name: "Tomato"}, { name: "Begun"}, { name: "Capsicum"}, { name: "Sosah/China"}, { name: "Squash"}, { name: "Pui"}, { name: "Bhindi"}, { name: "Ocha Loata"}, { name: "Lal Saag"}, { name: "Lamba Saag"}, { name: "Misti Kumra"}, { name: "Kochu"}, { name: "Matar Suti"}, { name: "Lemon/Lebu"}],
+            "Bartan Items": [{ name: "Big Oven"}, { name: "Small Oven"}, { name: "Big Kadahi"}, { name: "Small Kadahi"}, { name: "Jag"}, { name: "Steel Tray"}]
         };
+        let selectedItems = [];
+        let accordionStates = {}; // Object to store the open/closed state of accordions
+        let db;
 
-        function loadDataFromDB() {
-            const itemsFromDB = localStorage.getItem('cateringAllItems');
-            allItems = itemsFromDB ? JSON.parse(itemsFromDB) : defaultItems;
-
-            const invoicesFromDB = localStorage.getItem('cateringSavedInvoices');
-            savedInvoices = invoicesFromDB ? JSON.parse(invoicesFromDB) : [];
+        // --- DATABASE (IndexedDB) LOGIC ---
+        function initDB() {
+            const request = indexedDB.open("CateringDB", 1);
+            request.onupgradeneeded = (event) => {
+                db = event.target.result;
+                if (!db.objectStoreNames.contains('invoices')) {
+                    db.createObjectStore('invoices', { keyPath: 'id', autoIncrement: true });
+                }
+            };
+            request.onsuccess = (event) => {
+                db = event.target.result;
+                renderSavedInvoices();
+            };
+            request.onerror = (event) => console.error("Database error: ", event.target.errorCode);
         }
 
-        function saveAllItemsToDB() {
-            localStorage.setItem('cateringAllItems', JSON.stringify(allItems));
+        function saveInvoiceToDB() {
+            const invoiceId = document.getElementById('invoiceId').value;
+            const invoiceData = {
+                customerName: document.getElementById('customerName').value,
+                customerNumber: document.getElementById('customerNumber').value,
+                billDate: document.getElementById('billDate').value,
+                items: selectedItems,
+                quotedPrice: document.getElementById('quotedPrice').value,
+                advanceAmount: document.getElementById('advanceAmount').value,
+                lastModified: new Date().toISOString()
+            };
+
+            const transaction = db.transaction(['invoices'], 'readwrite');
+            const store = transaction.objectStore('invoices');
+            
+            let request;
+            if (invoiceId) {
+                invoiceData.id = parseInt(invoiceId);
+                request = store.put(invoiceData);
+            } else {
+                request = store.add(invoiceData);
+            }
+
+            request.onsuccess = () => {
+                alert(`Invoice ${invoiceId ? 'updated' : 'saved'} successfully!`);
+                clearBill(false);
+                renderSavedInvoices();
+            };
+            request.onerror = (e) => console.error('Error saving invoice:', e.target.error);
+        }
+        
+        function renderSavedInvoices() {
+            const store = db.transaction('invoices').objectStore('invoices');
+            const listDiv = document.getElementById('saved-invoices-list');
+            listDiv.innerHTML = `<p class="text-gray-500">Loading saved invoices...</p>`;
+            
+            store.getAll().onsuccess = (event) => {
+                const invoices = event.target.result.reverse();
+                if (invoices.length === 0) {
+                    listDiv.innerHTML = `<p class="text-center text-gray-500">No invoices have been saved yet.</p>`;
+                    return;
+                }
+
+                const table = document.createElement('table');
+                table.className = "min-w-full divide-y divide-gray-200";
+                table.innerHTML = `
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200"></tbody>`;
+                
+                const tbody = table.querySelector('tbody');
+                invoices.forEach(inv => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${inv.customerName || 'N/A'}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${inv.billDate || 'N/A'}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">₹${parseFloat(inv.quotedPrice || 0).toFixed(2)}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button onclick="editInvoice(${inv.id})" class="text-indigo-600 hover:text-indigo-900">Edit</button>
+                            <button onclick="generatePDFForSaved(${inv.id})" class="text-green-600 hover:text-green-900">PDF</button>
+                            <button onclick="deleteInvoice(${inv.id})" class="text-red-600 hover:text-red-900">Delete</button>
+                        </td>`;
+                    tbody.appendChild(row);
+                });
+                listDiv.innerHTML = '';
+                listDiv.appendChild(table);
+            };
+        }
+        
+        function editInvoice(id) {
+            const store = db.transaction('invoices').objectStore('invoices');
+            store.get(id).onsuccess = (event) => {
+                const inv = event.target.result;
+                document.getElementById('customerName').value = inv.customerName;
+                document.getElementById('customerNumber').value = inv.customerNumber;
+                document.getElementById('billDate').value = inv.billDate;
+                document.getElementById('quotedPrice').value = inv.quotedPrice;
+                document.getElementById('advanceAmount').value = inv.advanceAmount;
+                document.getElementById('invoiceId').value = inv.id;
+                selectedItems = inv.items;
+                renderInvoice();
+                renderItemSelection();
+                updateTotals();
+                window.scrollTo(0, 0);
+                alert("Loaded invoice for editing. Click 'Save Invoice' to update changes.");
+            };
         }
 
-        function saveInvoicesToDB() {
-            localStorage.setItem('cateringSavedInvoices', JSON.stringify(savedInvoices));
+        function deleteInvoice(id) {
+            if (!confirm('Are you sure you want to permanently delete this invoice?')) return;
+            const request = db.transaction(['invoices'], 'readwrite').objectStore('invoices').delete(id);
+            request.onsuccess = () => {
+                renderSavedInvoices();
+                alert('Invoice deleted.');
+            };
         }
 
+        // --- ITEM MANAGEMENT & UI RENDERING ---
+        function loadItems() {
+            const storedItems = localStorage.getItem('cateringItems');
+            allItems = storedItems ? JSON.parse(storedItems) : defaultItems;
+        }
 
-        // --- UI RENDERING ---
+        function saveItems() {
+            localStorage.setItem('cateringItems', JSON.stringify(allItems));
+        }
 
         function renderItemSelection() {
             const itemSelectionDiv = document.getElementById('item-selection');
-            itemSelectionDiv.innerHTML = ''; 
+            itemSelectionDiv.innerHTML = '';
 
             for (const category in allItems) {
                 const categoryDiv = document.createElement('div');
-                categoryDiv.classList.add('bg-white', 'p-6', 'rounded-xl', 'shadow-lg');
-
+                categoryDiv.className = 'bg-white p-4 rounded-xl shadow-lg border';
                 const header = document.createElement('div');
-                header.classList.add('accordion-header', 'flex', 'justify-between', 'items-center', 'font-bold', 'text-xl', 'text-gray-800', 'mb-4');
+                header.className = 'accordion-header flex justify-between items-center font-bold text-xl text-gray-800';
                 header.innerHTML = `
                     <span>${category}</span>
                     <div class="flex items-center space-x-4">
-                        <button class="add-item-btn text-sm bg-indigo-500 text-white px-3 py-1 rounded-md hover:bg-indigo-600" data-category="${category}">+ Add Item</button>
+                        <button class="add-new-item-btn text-sm bg-indigo-100 text-indigo-700 font-semibold px-3 py-1 rounded-full hover:bg-indigo-200" data-category="${category}">+ Add New</button>
                         <span class="transform transition-transform duration-300">▼</span>
-                    </div>
-                `;
-                categoryDiv.appendChild(header);
-
-                const content = document.createElement('div');
-                content.classList.add('accordion-content', 'grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-4', 'lg:grid-cols-5', 'gap-4', 'p-2');
-                categoryDiv.appendChild(content);
+                    </div>`;
                 
-                const arrowSpan = header.querySelector('.transform');
-
+                const content = document.createElement('div');
+                content.className = 'accordion-content grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pt-4';
+                
                 header.onclick = (e) => {
-                    // Prevent closing when "Add Item" is clicked
-                    if (e.target.classList.contains('add-item-btn')) {
-                        return;
-                    }
+                    if (e.target.classList.contains('add-new-item-btn')) return;
                     const isOpen = content.classList.toggle('open');
-                    if (arrowSpan) arrowSpan.classList.toggle('rotate-180');
+                    header.querySelector('span.transform').classList.toggle('rotate-180');
                     accordionStates[category] = isOpen;
                 };
                 
-                // Check and apply the saved state during re-render
                 if (accordionStates[category]) {
                     content.classList.add('open');
-                    if(arrowSpan) arrowSpan.classList.add('rotate-180');
+                    header.querySelector('span.transform').classList.add('rotate-180');
                 }
 
                 allItems[category].forEach(item => {
                     const itemCard = document.createElement('div');
-                    itemCard.classList.add('item-card', 'bg-gray-100', 'rounded-lg', 'p-4', 'text-center', 'cursor-pointer', 'shadow-sm', 'hover:bg-indigo-100');
-                    itemCard.innerHTML = `<p class="font-semibold text-sm md:text-base">${item.name}</p>`;
+                    itemCard.className = 'item-card bg-gray-100 rounded-lg p-4 text-center cursor-pointer shadow-sm hover:bg-white border-2 border-transparent';
+                    itemCard.textContent = item.name;
+                    
                     if (selectedItems.some(i => i.name === item.name)) {
                         itemCard.classList.add('selected-item');
                     }
+                    
                     itemCard.onclick = () => toggleItemSelection(item);
                     content.appendChild(itemCard);
                 });
-
+                
+                categoryDiv.appendChild(header);
+                categoryDiv.appendChild(content);
                 itemSelectionDiv.appendChild(categoryDiv);
             }
         }
         
+        // --- INVOICE LOGIC ---
+        function toggleItemSelection(item) {
+            const existingItemIndex = selectedItems.findIndex(i => i.name === item.name);
+            if (existingItemIndex > -1) {
+                selectedItems.splice(existingItemIndex, 1);
+            } else {
+                selectedItems.push({ ...item, quantity: '' });
+            }
+            renderInvoice();
+            renderItemSelection();
+        }
+
         function renderInvoice() {
             const invoiceBody = document.getElementById('invoice-items');
             invoiceBody.innerHTML = '';
 
             if (selectedItems.length === 0) {
-                invoiceBody.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-4">No items selected.</td></tr>`;
+                invoiceBody.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-gray-500">No items selected.</td></tr>`;
+            } else {
+                selectedItems.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.name}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <input type="text" value="${item.quantity}" class="quantity-input w-24 border-gray-300 rounded-md p-1" placeholder="e.g. 5 kg" data-index="${index}">
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="remove-btn text-red-600 hover:text-red-900 font-semibold" data-index="${index}">Remove</button>
+                        </td>`;
+                    invoiceBody.appendChild(row);
+                });
             }
-
-            selectedItems.forEach((item, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.name}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <input type="number" min="1" value="${item.quantity}" class="quantity-input w-16 text-center border-gray-300 rounded-md" data-index="${index}">
-                    </td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button class="remove-btn text-red-600 hover:text-red-900 font-semibold" data-index="${index}">Remove</button>
-                    </td>
-                `;
-                invoiceBody.appendChild(row);
-            });
             updateTotals();
         }
 
-        function renderSavedInvoices() {
-            const listDiv = document.getElementById('saved-invoices-list');
-            const sectionDiv = document.getElementById('saved-invoices-section');
-            listDiv.innerHTML = '';
-
-            if (savedInvoices.length === 0) {
-                sectionDiv.style.display = 'none';
-                return;
-            }
-            sectionDiv.style.display = 'block';
-
-            savedInvoices.forEach(invoice => {
-                const card = document.createElement('div');
-                card.classList.add('bg-gray-50', 'p-4', 'rounded-lg', 'shadow-sm', 'flex', 'flex-col', 'md:flex-row', 'justify-between', 'items-start', 'md:items-center');
-                card.innerHTML = `
-                    <div>
-                        <p class="font-bold text-lg">${invoice.customerName}</p>
-                        <p class="text-sm text-gray-600">Date: ${invoice.billDate} | Items: ${invoice.items.length}</p>
-                        <p class="text-sm text-gray-500">ID: ${invoice.id.substring(0,8)}</p>
-                    </div>
-                    <div class="flex space-x-2 mt-4 md:mt-0">
-                        <button class="load-invoice-btn px-3 py-1 bg-gray-200 text-xs font-bold rounded" data-id="${invoice.id}">Load</button>
-                        <button class="pdf-invoice-btn px-3 py-1 bg-indigo-500 text-white text-xs font-bold rounded" data-id="${invoice.id}">PDF</button>
-                        <button class="whatsapp-invoice-btn px-3 py-1 bg-green-500 text-white text-xs font-bold rounded" data-id="${invoice.id}">WhatsApp</button>
-                        <button class="delete-invoice-btn px-3 py-1 bg-red-500 text-white text-xs font-bold rounded" data-id="${invoice.id}">Delete</button>
-                    </div>
-                `;
-                listDiv.appendChild(card);
-            });
-        }
-        
         function updateTotals() {
             const quotedPrice = parseFloat(document.getElementById('quotedPrice').value) || 0;
             const advanceAmount = parseFloat(document.getElementById('advanceAmount').value) || 0;
             const balanceDue = quotedPrice - advanceAmount;
             document.getElementById('balanceDue').textContent = `₹${balanceDue.toFixed(2)}`;
+            document.getElementById('signature-date').textContent = `Date: ${new Date().toLocaleString('en-IN')}`;
         }
-
-
-        // --- CORE LOGIC ---
         
-        function toggleItemSelection(item) {
-            const itemIndex = selectedItems.findIndex(i => i.name === item.name);
-            if (itemIndex > -1) {
-                // Item exists, so remove it
-                selectedItems.splice(itemIndex, 1);
-            } else {
-                // Item doesn't exist, so add it
-                selectedItems.push({ ...item, quantity: 1 });
-            }
-            renderInvoice();
-            renderItemSelection(); // Re-render to update selection highlight
-        }
-
-        function clearBill() {
+        function clearBill(showAlert = true) {
             selectedItems = [];
-            document.getElementById('invoiceId').value = '';
+            accordionStates = {};
             document.getElementById('customerName').value = '';
-            document.getElementById('customerNumber').value = '';
+            document.getElementById('customerNumber').value = '+91';
             document.getElementById('billDate').valueAsDate = new Date();
             document.getElementById('quotedPrice').value = '0';
             document.getElementById('advanceAmount').value = '0';
+            document.getElementById('invoiceId').value = '';
             renderInvoice();
             renderItemSelection();
+            if (showAlert) alert('Bill cleared!');
         }
         
-        function getInvoiceObject() {
-            const id = document.getElementById('invoiceId').value || `inv-${Date.now()}`;
-            const customerName = document.getElementById('customerName').value || 'N/A';
-            const customerNumber = document.getElementById('customerNumber').value || 'N/A';
-            const billDate = document.getElementById('billDate').value || new Date().toISOString().slice(0, 10);
-            const quotedPrice = document.getElementById('quotedPrice').value || '0';
-            const advanceAmount = document.getElementById('advanceAmount').value || '0';
-            const balanceDue = parseFloat(quotedPrice) - parseFloat(advanceAmount);
-
+        // --- PDF & WHATSAPP ---
+        function generateInvoiceData(savedInvoice = null) {
+             if (savedInvoice) {
+                return {
+                    customerName: savedInvoice.customerName || 'N/A',
+                    customerNumber: savedInvoice.customerNumber || 'N/A',
+                    billDate: savedInvoice.billDate || new Date().toISOString().split('T')[0],
+                    items: savedInvoice.items,
+                    quotedPrice: parseFloat(savedInvoice.quotedPrice) || 0,
+                    advanceAmount: parseFloat(savedInvoice.advanceAmount) || 0
+                }
+            }
             return {
-                id, customerName, customerNumber, billDate,
-                items: JSON.parse(JSON.stringify(selectedItems)), // Deep copy
-                quotedPrice, advanceAmount, balanceDue
+                customerName: document.getElementById('customerName').value || 'N/A',
+                customerNumber: document.getElementById('customerNumber').value || 'N/A',
+                billDate: document.getElementById('billDate').value || new Date().toISOString().split('T')[0],
+                items: selectedItems,
+                quotedPrice: parseFloat(document.getElementById('quotedPrice').value) || 0,
+                advanceAmount: parseFloat(document.getElementById('advanceAmount').value) || 0
             };
         }
-        
-        function saveInvoice() {
-            if (selectedItems.length === 0) {
-                alert("Please select at least one item before saving.");
-                return;
-            }
-            const newInvoice = getInvoiceObject();
-            const existingIndex = savedInvoices.findIndex(inv => inv.id === newInvoice.id);
 
-            if (existingIndex > -1) {
-                // Update existing invoice
-                savedInvoices[existingIndex] = newInvoice;
-            } else {
-                // Add new invoice
-                savedInvoices.push(newInvoice);
-            }
-            saveInvoicesToDB();
-            renderSavedInvoices();
-            alert(`Invoice for ${newInvoice.customerName} has been saved!`);
-        }
-        
-        function loadInvoice(id) {
-            const invoice = savedInvoices.find(inv => inv.id === id);
-            if(invoice) {
-                document.getElementById('invoiceId').value = invoice.id;
-                document.getElementById('customerName').value = invoice.customerName;
-                document.getElementById('customerNumber').value = invoice.customerNumber;
-                document.getElementById('billDate').value = invoice.billDate;
-                document.getElementById('quotedPrice').value = invoice.quotedPrice;
-                document.getElementById('advanceAmount').value = invoice.advanceAmount;
-                selectedItems = JSON.parse(JSON.stringify(invoice.items));
-                
-                renderInvoice();
-                renderItemSelection();
-                window.scrollTo(0, 0);
-            }
-        }
-        
-        function deleteInvoice(id) {
-            if (confirm("Are you sure you want to delete this invoice? This cannot be undone.")) {
-                savedInvoices = savedInvoices.filter(inv => inv.id !== id);
-                saveInvoicesToDB();
-                renderSavedInvoices();
-            }
-        }
-
-        // --- PDF & WHATSAPP ---
-        
-        function generatePDF(invoiceData) {
+        async function generatePDF(invoiceData) {
+            const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
+            doc.setFont('helvetica', 'normal');
+            const logo = 'https://files.catbox.moe/s2aqg3.png';
+            try {
+                const response = await fetch(logo);
+                const blob = await response.blob();
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = () => {
+                    const base64data = reader.result;                
+                    doc.addImage(base64data, 'PNG', 15, 12, 25, 25);
+                    addPdfContent(doc, invoiceData);
+                    doc.save(`JhaKitchen_Invoice_${invoiceData.customerName.replace(/\s/g, '_')}.pdf`);
+                };
+            } catch(e) {
+                console.error("Could not load logo image for PDF, continuing without it.", e);
+                addPdfContent(doc, invoiceData);
+                doc.save(`JhaKitchen_Invoice_${invoiceData.customerName.replace(/\s/g, '_')}.pdf`);
+            }
+        }
+        
+        function addPdfContent(doc, invoiceData) {
+            const balanceDue = invoiceData.quotedPrice - invoiceData.advanceAmount;
+            const items = invoiceData.items;
+            const mid = Math.ceil(items.length / 2);
+            const firstHalf = items.slice(0, mid);
+            const secondHalf = items.slice(mid);
+            const itemsInColumns = [];
+            for (let i = 0; i < mid; i++) {
+                const row = [firstHalf[i].name, firstHalf[i].quantity];
+                if (secondHalf[i]) {
+                    row.push(secondHalf[i].name, secondHalf[i].quantity);
+                } else {
+                    row.push('', '');
+                }
+                itemsInColumns.push(row);
+            }
+
             doc.setFontSize(22);
-            doc.setFont("helvetica", "bold");
-            doc.text("JhaKitchen Catering Services", 105, 20, null, null, "center");
-
+            doc.setFont('helvetica', 'bold');
+            doc.text("JhaKitchen Catering Services", 45, 20);
             doc.setFontSize(10);
-            doc.setFont("helvetica", "normal");
-            doc.text("Chalsa, Jalpaiguri, West Bengal, India, Pin Code - 735206", 105, 28, null, null, "center");
-            
+            doc.setFont('helvetica', 'normal');
+            doc.text("Chalsa, Jalpaiguri, West Bengal - 735206", 45, 26);
+            doc.setFontSize(18);
+            doc.text("Invoice / Quotation", 15, 45);
             doc.setLineWidth(0.5);
-            doc.line(20, 35, 190, 35);
-
-            doc.setFontSize(12);
-            doc.text(`Customer Name: ${invoiceData.customerName}`, 20, 45);
-            doc.text(`Contact: +91${invoiceData.customerNumber}`, 20, 52);
-            doc.text(`Date: ${invoiceData.billDate}`, 188, 45, null, null, "right");
-
+            doc.line(15, 47, 195, 47);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Bill To:", 15, 55);
+            doc.setFont('helvetica', 'normal');
+            doc.text(invoiceData.customerName, 15, 60);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Invoice Date:", 140, 55);
+            doc.setFont('helvetica', 'normal');
+            doc.text(invoiceData.billDate, 165, 55);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Contact:", 140, 60);
+            doc.setFont('helvetica', 'normal');
+            doc.text(invoiceData.customerNumber, 157, 60);
             doc.autoTable({
-                startY: 60,
-                head: [['Item Name', 'Quantity']],
-                body: invoiceData.items.map(item => [item.name, item.quantity]),
-                theme: 'striped',
-                headStyles: { fillColor: [74, 85, 104] },
+                startY: 70,
+                head: [['Item Name', 'Quantity / Details', 'Item Name', 'Quantity / Details']],
+                body: itemsInColumns,
+                theme: 'grid',
+                headStyles: { fillColor: [74, 85, 104] }
             });
             
             let finalY = doc.lastAutoTable.finalY + 15;
-
-            doc.setFontSize(14);
-            doc.setFont("helvetica", "bold");
-            doc.text("Quote Summary", 188, finalY, null, null, "right");
-
             doc.setFontSize(12);
-            doc.setFont("helvetica", "normal");
-            doc.text(`Quoted Price: ₹${parseFloat(invoiceData.quotedPrice).toFixed(2)}`, 188, finalY + 8, null, null, "right");
-            doc.text(`Advance Paid: ₹${parseFloat(invoiceData.advanceAmount).toFixed(2)}`, 188, finalY + 16, null, null, "right");
-            doc.setFont("helvetica", "bold");
-            doc.text(`Balance Due: ₹${invoiceData.balanceDue.toFixed(2)}`, 188, finalY + 24, null, null, "right");
-
-            // Add signature
-            const sigY = doc.internal.pageSize.height - 30;
+            doc.setFont('helvetica', 'bold');
+            doc.text("Quoted Price:", 130, finalY);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Rs. ${invoiceData.quotedPrice.toFixed(2)}`, 195, finalY, { align: 'right' });
             doc.setFontSize(10);
-            doc.text("Digitally Signed - JhaKitchen Catering Services", 105, sigY, null, null, "center");
-            
-            doc.save(`JhaKitchen_Invoice_${invoiceData.customerName.replace(/\s/g, '_')}.pdf`);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Advance Paid:", 130, finalY + 7);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Rs. ${invoiceData.advanceAmount.toFixed(2)}`, 195, finalY + 7, { align: 'right' });
+            doc.setLineWidth(0.2);
+            doc.line(130, finalY + 10, 195, finalY + 10);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Balance Due:", 130, finalY + 16);
+            doc.text(`Rs. ${balanceDue.toFixed(2)}`, 195, finalY + 16, { align: 'right' });
+            doc.setFontSize(9);
+            doc.setTextColor(100);
+            doc.text("Digitally Signed - JhaKitchen Catering Services", 15, doc.internal.pageSize.height - 10);
         }
 
-        function generateWhatsAppMessage(invoiceData) {
-            if (!invoiceData.customerNumber) {
+        async function generatePDFForSaved(id) {
+            const store = db.transaction('invoices').objectStore('invoices');
+            store.get(id).onsuccess = async (event) => {
+                const invoiceData = generateInvoiceData(event.target.result);
+                await generatePDF(invoiceData);
+            };
+        }
+
+        function sendToWhatsApp() {
+            const invoiceData = generateInvoiceData();
+            if (!invoiceData.customerNumber || invoiceData.customerNumber === '+91') {
                 alert('Please enter a customer number to send the invoice.');
                 return;
             }
-
-            let message = `Hello ${invoiceData.customerName},\n\n`;
-            message += `Here is your catering invoice from *JhaKitchen Catering Services* for the event on ${invoiceData.billDate}.\n\n`;
-            message += `*Items Required:*\n`;
-            invoiceData.items.forEach(item => {
-                message += `- ${item.name} (Qty: ${item.quantity})\n`;
-            });
-            message += `\n*Invoice Summary:*\n`;
-            message += `Total Quoted Price: ₹${parseFloat(invoiceData.quotedPrice).toFixed(2)}\n`;
-            message += `Advance Paid: ₹${parseFloat(invoiceData.advanceAmount).toFixed(2)}\n`;
-            message += `*Balance Due: ₹${invoiceData.balanceDue.toFixed(2)}*\n\n`;
-            message += "Thank you for choosing us!\n_Digitally Signed - JhaKitchen Catering Services_";
-            
-            const whatsappLink = `https://wa.me/91${invoiceData.customerNumber}?text=${encodeURIComponent(message)}`;
+            let message = `Hello *${invoiceData.customerName}*,\n\n`;
+            message += `Here is your catering quotation from *JhaKitchen Catering Services* for the event on *${invoiceData.billDate}*.\n\n`;
+            message += `*--- Items Required ---*\n`;
+            invoiceData.items.forEach(item => { message += `• ${item.name} (${item.quantity || 'N/A'})\n`; });
+            message += `\n*--- Quote Summary ---*\n`;
+            message += `Total Quoted Price: ₹${invoiceData.quotedPrice.toFixed(2)}\n`;
+            message += `Advance Paid: ₹${invoiceData.advanceAmount.toFixed(2)}\n`;
+            message += `*Balance Due: ₹${(invoiceData.quotedPrice - invoiceData.advanceAmount).toFixed(2)}*\n\n`;
+            message += "Thank you for choosing us!\nDigitally Signed - JhaKitchen Catering Services";
+            const whatsappLink = `https://wa.me/${invoiceData.customerNumber.replace('+', '')}?text=${encodeURIComponent(message)}`;
             window.open(whatsappLink, '_blank');
         }
-        
-        // --- MODAL ---
-        
-        const modal = document.getElementById('addItemModal');
-        
-        function openAddItemModal(category) {
-            document.getElementById('modalCategory').value = category;
-            document.getElementById('newItemName').value = '';
-            modal.style.display = 'block';
+
+        // --- MODAL LOGIC ---
+        function setupModal() {
+            const modal = document.getElementById('addItemModal');
+            document.body.addEventListener('click', e => {
+                if(e.target.classList.contains('add-new-item-btn')) {
+                    const category = e.target.dataset.category;
+                    document.getElementById('modalCategoryName').textContent = category;
+                    document.getElementById('modalCategoryKey').value = category;
+                    modal.style.display = 'block';
+                }
+            });
+            document.getElementById('closeModalBtn').onclick = () => modal.style.display = 'none';
+            window.onclick = (e) => { if (e.target == modal) modal.style.display = 'none'; }
+            document.getElementById('saveNewItemBtn').onclick = () => {
+                const category = document.getElementById('modalCategoryKey').value;
+                const name = document.getElementById('newItemName').value.trim();
+                const price = parseFloat(document.getElementById('newItemPrice').value) || 0;
+                if(name && category) {
+                    allItems[category].push({ name, price });
+                    saveItems();
+                    renderItemSelection();
+                    modal.style.display = 'none';
+                    document.getElementById('newItemName').value = '';
+                    document.getElementById('newItemPrice').value = '';
+                } else {
+                    alert('Please enter an item name.');
+                }
+            };
         }
 
-        function closeAddItemModal() {
-            modal.style.display = 'none';
-        }
-        
-        function confirmAddItem() {
-            const category = document.getElementById('modalCategory').value;
-            const newItemName = document.getElementById('newItemName').value.trim();
-
-            if (category && newItemName) {
-                // Add to data structure
-                allItems[category].push({ name: newItemName });
-                // Save to DB
-                saveAllItemsToDB();
-                // Re-render UI
-                renderItemSelection();
-                closeAddItemModal();
-            } else {
-                alert("Please enter a valid item name.");
-            }
-        }
-        
-        
         // --- EVENT LISTENERS ---
-        
         document.addEventListener('DOMContentLoaded', () => {
-            loadDataFromDB();
+            initDB();
+            loadItems();
             renderItemSelection();
             renderInvoice();
-            renderSavedInvoices();
+            setupModal();
             document.getElementById('billDate').valueAsDate = new Date();
-            document.getElementById('signatureDate').textContent += new Date().toISOString().slice(0, 10);
-        });
-        
-        // Item selection (via add button in category header)
-        document.getElementById('item-selection').addEventListener('click', (e) => {
-            if (e.target.classList.contains('add-item-btn')) {
-                e.stopPropagation();
-                openAddItemModal(e.target.dataset.category);
-            }
-        });
 
-        // Invoice table interactions
-        document.getElementById('invoice-items').addEventListener('change', (e) => {
-            if (e.target.classList.contains('quantity-input')) {
-                const index = e.target.dataset.index;
-                const newQuantity = parseInt(e.target.value);
-                if (newQuantity >= 1) {
-                    selectedItems[index].quantity = newQuantity;
-                    renderInvoice();
+            document.getElementById('invoice-items').addEventListener('input', (e) => {
+                if (e.target.classList.contains('quantity-input')) {
+                    const index = e.target.dataset.index;
+                    selectedItems[index].quantity = e.target.value;
                 }
-            }
-        });
+            });
 
-        document.getElementById('invoice-items').addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-btn')) {
-                const index = e.target.dataset.index;
-                selectedItems.splice(index, 1);
-                renderInvoice();
-                renderItemSelection(); 
-            }
-        });
+            document.getElementById('invoice-items').addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-btn')) {
+                    const index = e.target.dataset.index;
+                    selectedItems.splice(index, 1);
+                    renderInvoice();
+                    renderItemSelection(); // Re-render to update highlights
+                }
+            });
 
-        // Totals and controls
-        document.getElementById('quotedPrice').addEventListener('input', updateTotals);
-        document.getElementById('advanceAmount').addEventListener('input', updateTotals);
-        document.getElementById('clear-bill').addEventListener('click', clearBill);
-        document.getElementById('save-invoice').addEventListener('click', saveInvoice);
-        document.getElementById('download-pdf').addEventListener('click', () => {
-            if (selectedItems.length === 0) {
-                 alert("Please select at least one item to generate a PDF.");
-                 return;
-            }
-            generatePDF(getInvoiceObject());
+            document.getElementById('quotedPrice').addEventListener('input', updateTotals);
+            document.getElementById('advanceAmount').addEventListener('input', updateTotals);
+            document.getElementById('save-bill').addEventListener('click', saveInvoiceToDB);
+            document.getElementById('clear-bill').addEventListener('click', () => clearBill(true));
+            document.getElementById('download-bill').addEventListener('click', async () => await generatePDF(generateInvoiceData()));
+            document.getElementById('whatsapp-btn').addEventListener('click', sendToWhatsApp);
         });
-        document.getElementById('whatsapp-btn').addEventListener('click', () => generateWhatsAppMessage(getInvoiceObject()));
-
-        // Saved invoices interactions
-        document.getElementById('saved-invoices-list').addEventListener('click', (e) => {
-            const button = e.target;
-            const id = button.dataset.id;
-            if (!id) return;
-            
-            if (button.classList.contains('load-invoice-btn')) loadInvoice(id);
-            if (button.classList.contains('delete-invoice-btn')) deleteInvoice(id);
-            if (button.classList.contains('pdf-invoice-btn')) {
-                 const invoice = savedInvoices.find(inv => inv.id === id);
-                 if(invoice) generatePDF(invoice);
-            }
-            if (button.classList.contains('whatsapp-invoice-btn')) {
-                const invoice = savedInvoices.find(inv => inv.id === id);
-                if(invoice) generateWhatsAppMessage(invoice);
-            }
-        });
-
-        // Modal buttons
-        document.getElementById('cancelAddItem').addEventListener('click', closeAddItemModal);
-        document.getElementById('confirmAddItem').addEventListener('click', confirmAddItem);
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                closeAddItemModal();
-            }
-        }
     </script>
 </body>
 </html>
