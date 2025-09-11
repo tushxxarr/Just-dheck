@@ -579,7 +579,11 @@
                 head: [['Item Name', 'Quantity / Details', 'Item Name', 'Quantity / Details']],
                 body: itemsInColumns,
                 theme: 'grid',
-                headStyles: { fillColor: [74, 85, 104] }
+                headStyles: { 
+                    fillColor: [0, 0, 0], // Black header background
+                    textColor: [255, 255, 255] // White header text
+                },
+                lineColor: [0, 0, 0] // Black table lines
             });
             
             let finalY = doc.lastAutoTable.finalY;
@@ -725,4 +729,5 @@
     </script>
 </body>
 </html>
+
 
