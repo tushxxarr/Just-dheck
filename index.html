@@ -483,26 +483,50 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.setFont('helvetica', 'normal');
-            const logo = 'https://files.catbox.moe/s2aqg3.png';
+
+            // Define image URLs
+            const logoUrl = 'https://files.catbox.moe/s2aqg3.png';
+            const qrCodeUrl = 'https://files.catbox.moe/riuem2.jpg';
+            const checkmarkUrl = 'https://files.catbox.moe/uoasqv.png'; // Green checkmark
+
             try {
-                const response = await fetch(logo);
-                const blob = await response.blob();
-                const reader = new FileReader();
-                reader.readAsDataURL(blob);
-                reader.onloadend = () => {
-                    const base64data = reader.result;                
-                    doc.addImage(base64data, 'PNG', 15, 12, 25, 25);
-                    addPdfContent(doc, invoiceData);
-                    doc.save(`JhaKitchen_Invoice_${invoiceData.customerName.replace(/\s/g, '_')}.pdf`);
-                };
+                // Fetch all images and convert them to Base64
+                const [logoBase64, qrCodeBase64, checkmarkBase64] = await Promise.all([
+                    fetch(logoUrl).then(res => res.blob()).then(blob => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    })),
+                    fetch(qrCodeUrl).then(res => res.blob()).then(blob => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    })),
+                    fetch(checkmarkUrl).then(res => res.blob()).then(blob => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    }))
+                ]);
+                
+                // Add all content to the PDF now that images are loaded
+                addPdfContent(doc, invoiceData, logoBase64, qrCodeBase64, checkmarkBase64);
+                
+                // Save the PDF
+                doc.save(`JhaKitchen_Invoice_${invoiceData.customerName.replace(/\s/g, '_')}.pdf`);
+
             } catch(e) {
-                console.error("Could not load logo image for PDF, continuing without it.", e);
-                addPdfContent(doc, invoiceData);
+                console.error("Could not load images for PDF, continuing without them.", e);
+                // Fallback for if images fail to load
+                addPdfContent(doc, invoiceData, null, null, null);
                 doc.save(`JhaKitchen_Invoice_${invoiceData.customerName.replace(/\s/g, '_')}.pdf`);
             }
         }
         
-        function addPdfContent(doc, invoiceData) {
+        function addPdfContent(doc, invoiceData, logoBase64, qrCodeBase64, checkmarkBase64) {
             const balanceDue = invoiceData.quotedPrice - invoiceData.advanceAmount;
             const items = invoiceData.items;
             const mid = Math.ceil(items.length / 2);
@@ -519,12 +543,18 @@
                 itemsInColumns.push(row);
             }
 
+            // --- Header ---
+            if (logoBase64) {
+                doc.addImage(logoBase64, 'PNG', 15, 12, 25, 25);
+            }
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
             doc.text("JhaKitchen Catering Services", 45, 20);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.text("Chalsa, Jalpaiguri, West Bengal - 735206", 45, 26);
+            
+            // --- Customer Info ---
             doc.setFontSize(18);
             doc.text("Invoice / Quotation", 15, 45);
             doc.setLineWidth(0.5);
@@ -542,6 +572,8 @@
             doc.text("Contact:", 140, 60);
             doc.setFont('helvetica', 'normal');
             doc.text(invoiceData.customerNumber, 157, 60);
+            
+            // --- Items Table ---
             doc.autoTable({
                 startY: 70,
                 head: [['Item Name', 'Quantity / Details', 'Item Name', 'Quantity / Details']],
@@ -550,26 +582,55 @@
                 headStyles: { fillColor: [74, 85, 104] }
             });
             
-            let finalY = doc.lastAutoTable.finalY + 15;
+            let finalY = doc.lastAutoTable.finalY;
+            const summaryY = finalY > 180 ? 20 : finalY + 15; // Move summary to next page if table is too long
+            if (finalY > 180) {
+                doc.addPage();
+            }
+
+            // --- Payment Summary ---
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text("Quoted Price:", 130, finalY);
+            doc.text("Quoted Price:", 130, summaryY);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Rs. ${invoiceData.quotedPrice.toFixed(2)}`, 195, finalY, { align: 'right' });
+            doc.text(`Rs. ${invoiceData.quotedPrice.toFixed(2)}`, 195, summaryY, { align: 'right' });
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
-            doc.text("Advance Paid:", 130, finalY + 7);
+            doc.text("Advance Paid:", 130, summaryY + 7);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Rs. ${invoiceData.advanceAmount.toFixed(2)}`, 195, finalY + 7, { align: 'right' });
+            doc.text(`Rs. ${invoiceData.advanceAmount.toFixed(2)}`, 195, summaryY + 7, { align: 'right' });
             doc.setLineWidth(0.2);
-            doc.line(130, finalY + 10, 195, finalY + 10);
+            doc.line(130, summaryY + 10, 195, summaryY + 10);
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text("Balance Due:", 130, finalY + 16);
-            doc.text(`Rs. ${balanceDue.toFixed(2)}`, 195, finalY + 16, { align: 'right' });
-            doc.setFontSize(9);
-            doc.setTextColor(100);
-            doc.text("Digitally Signed - JhaKitchen Catering Services", 15, doc.internal.pageSize.height - 10);
+            doc.text("Balance Due:", 130, summaryY + 16);
+            doc.text(`Rs. ${balanceDue.toFixed(2)}`, 195, summaryY + 16, { align: 'right' });
+
+            // --- QR Code & Signature ---
+            const pageHeight = doc.internal.pageSize.height;
+            if (qrCodeBase64) {
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text("Scan to Pay:", 20, pageHeight - 65);
+                // Dimensions based on 593x780 aspect ratio
+                const qrWidth = 40;
+                const qrHeight = (qrWidth * 780) / 593;
+                doc.addImage(qrCodeBase64, 'JPEG', 20, pageHeight - 60, qrWidth, qrHeight);
+            }
+
+            if (checkmarkBase64) {
+                const date = new Date();
+                // Format: YYYY.MM.DD HH:MM:SS (sv-SE locale is YYYY-MM-DD)
+                const formattedDate = date.toLocaleString('sv-SE').replace(/-/g, '.');
+
+                doc.addImage(checkmarkBase64, 'PNG', 120, pageHeight - 50, 20, 20);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.text("Digitally signed by JhaKitchen", 143, pageHeight - 47);
+                doc.text(`Date: ${formattedDate}`, 143, pageHeight - 42);
+                doc.setFont('helvetica', 'bold');
+                doc.text("for JhaKitchen Catering Services", 130, pageHeight - 25);
+            }
         }
 
         async function generatePDFForSaved(id) {
@@ -664,5 +725,4 @@
     </script>
 </body>
 </html>
-
 
