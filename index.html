@@ -547,12 +547,21 @@
             if (logoBase64) {
                 doc.addImage(logoBase64, 'PNG', 15, 12, 25, 25);
             }
+            // NEW: Add QR Code to the top right of the header
+            if (qrCodeBase64) {
+                const qrHeight = 25; // Set a fixed height for alignment with logo
+                const qrWidth = (qrHeight * 593) / 780; // Calculate width to maintain aspect ratio
+                const pageW = doc.internal.pageSize.getWidth();
+                const qrX = pageW - 15 - qrWidth; // Position from the right edge
+                doc.addImage(qrCodeBase64, 'JPEG', qrX, 12, qrWidth, qrHeight);
+            }
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text("JhaKitchen Catering Services", 45, 20);
+            // Centered the main title for better balance
+            doc.text("JhaKitchen Catering Services", 105, 20, { align: 'center' });
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text("Chalsa, Jalpaiguri, West Bengal - 735206", 45, 26);
+            doc.text("Chalsa, Jalpaiguri, West Bengal - 735206", 105, 26, { align: 'center' });
             
             // --- Customer Info ---
             doc.setFontSize(18);
@@ -583,7 +592,13 @@
                     fillColor: [0, 0, 0], // Black header background
                     textColor: [255, 255, 255] // White header text
                 },
-                lineColor: [0, 0, 0] // Black table lines
+                bodyStyles: {
+                    fontStyle: 'bold' // Makes the item text bold
+                },
+                styles: {
+                    lineWidth: 0.3, // Increases the line thickness
+                    lineColor: [0, 0, 0] // Keeps the lines black
+                }
             });
             
             let finalY = doc.lastAutoTable.finalY;
@@ -612,15 +627,7 @@
 
             // --- QR Code & Signature ---
             const pageHeight = doc.internal.pageSize.height;
-            if (qrCodeBase64) {
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'bold');
-                doc.text("Scan to Pay:", 20, pageHeight - 65);
-                // Dimensions based on 593x780 aspect ratio
-                const qrWidth = 40;
-                const qrHeight = (qrWidth * 780) / 593;
-                doc.addImage(qrCodeBase64, 'JPEG', 20, pageHeight - 60, qrWidth, qrHeight);
-            }
+            // The QR code has been moved to the header. This section now only contains the signature.
 
             if (checkmarkBase64) {
                 const date = new Date();
