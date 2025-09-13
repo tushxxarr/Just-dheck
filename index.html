@@ -27,6 +27,11 @@
         /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: #fefefe; margin: 10% auto; padding: 24px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 12px; }
+        
+        /* Drag and Drop Styles */
+        .draggable-row { cursor: move; }
+        .dragging { opacity: 0.5; background: #f0f8ff; }
+
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -421,6 +426,9 @@
             } else {
                 selectedItems.forEach((item, index) => {
                     const row = document.createElement('tr');
+                    row.className = 'draggable-row'; // Add class for styling and identification
+                    row.draggable = true;
+                    row.dataset.index = index;
                     row.innerHTML = `
                         <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.name}</td>
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -512,15 +520,11 @@
                     }))
                 ]);
                 
-                // Add all content to the PDF now that images are loaded
                 addPdfContent(doc, invoiceData, logoBase64, qrCodeBase64, checkmarkBase64);
-                
-                // Save the PDF
                 doc.save(`JhaKitchen_Invoice_${invoiceData.customerName.replace(/\s/g, '_')}.pdf`);
 
             } catch(e) {
                 console.error("Could not load images for PDF, continuing without them.", e);
-                // Fallback for if images fail to load
                 addPdfContent(doc, invoiceData, null, null, null);
                 doc.save(`JhaKitchen_Invoice_${invoiceData.customerName.replace(/\s/g, '_')}.pdf`);
             }
@@ -547,17 +551,15 @@
             if (logoBase64) {
                 doc.addImage(logoBase64, 'PNG', 15, 12, 25, 25);
             }
-            // NEW: Add QR Code to the top right of the header
             if (qrCodeBase64) {
-                const qrHeight = 25; // Set a fixed height for alignment with logo
-                const qrWidth = (qrHeight * 593) / 780; // Calculate width to maintain aspect ratio
+                const qrHeight = 30; // Increased QR Code size
+                const qrWidth = (qrHeight * 593) / 780; 
                 const pageW = doc.internal.pageSize.getWidth();
-                const qrX = pageW - 15 - qrWidth; // Position from the right edge
+                const qrX = pageW - 15 - qrWidth;
                 doc.addImage(qrCodeBase64, 'JPEG', qrX, 12, qrWidth, qrHeight);
             }
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            // Centered the main title for better balance
             doc.text("JhaKitchen Catering Services", 105, 20, { align: 'center' });
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
@@ -565,44 +567,44 @@
             
             // --- Customer Info ---
             doc.setFontSize(18);
-            doc.text("Invoice / Quotation", 15, 45);
+            doc.text("Invoice / Quotation", 15, 50); // Adjusted Y position
             doc.setLineWidth(0.5);
-            doc.line(15, 47, 195, 47);
+            doc.line(15, 52, 195, 52);
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
-            doc.text("Bill To:", 15, 55);
+            doc.text("Bill To:", 15, 60); // Adjusted Y position
             doc.setFont('helvetica', 'normal');
-            doc.text(invoiceData.customerName, 15, 60);
+            doc.text(invoiceData.customerName, 15, 65); // Adjusted Y position
             doc.setFont('helvetica', 'bold');
-            doc.text("Invoice Date:", 140, 55);
+            doc.text("Invoice Date:", 140, 60); // Adjusted Y position
             doc.setFont('helvetica', 'normal');
-            doc.text(invoiceData.billDate, 165, 55);
+            doc.text(invoiceData.billDate, 165, 60); // Adjusted Y position
             doc.setFont('helvetica', 'bold');
-            doc.text("Contact:", 140, 60);
+            doc.text("Contact:", 140, 65); // Adjusted Y position
             doc.setFont('helvetica', 'normal');
-            doc.text(invoiceData.customerNumber, 157, 60);
+            doc.text(invoiceData.customerNumber, 157, 65); // Adjusted Y position
             
             // --- Items Table ---
             doc.autoTable({
-                startY: 70,
+                startY: 75, // Adjusted startY
                 head: [['Item Name', 'Quantity / Details', 'Item Name', 'Quantity / Details']],
                 body: itemsInColumns,
                 theme: 'grid',
                 headStyles: { 
-                    fillColor: [0, 0, 0], // Black header background
-                    textColor: [255, 255, 255] // White header text
+                    fillColor: [0, 0, 0],
+                    textColor: [255, 255, 255]
                 },
                 bodyStyles: {
-                    fontStyle: 'bold' // Makes the item text bold
+                    fontStyle: 'bold'
                 },
                 styles: {
-                    lineWidth: 0.3, // Increases the line thickness
-                    lineColor: [0, 0, 0] // Keeps the lines black
+                    lineWidth: 0.3,
+                    lineColor: [0, 0, 0]
                 }
             });
             
             let finalY = doc.lastAutoTable.finalY;
-            const summaryY = finalY > 180 ? 20 : finalY + 15; // Move summary to next page if table is too long
+            const summaryY = finalY > 180 ? 20 : finalY + 15; 
             if (finalY > 180) {
                 doc.addPage();
             }
@@ -625,15 +627,11 @@
             doc.text("Balance Due:", 130, summaryY + 16);
             doc.text(`Rs. ${balanceDue.toFixed(2)}`, 195, summaryY + 16, { align: 'right' });
 
-            // --- QR Code & Signature ---
+            // --- Signature ---
             const pageHeight = doc.internal.pageSize.height;
-            // The QR code has been moved to the header. This section now only contains the signature.
-
             if (checkmarkBase64) {
                 const date = new Date();
-                // Format: YYYY.MM.DD HH:MM:SS (sv-SE locale is YYYY-MM-DD)
                 const formattedDate = date.toLocaleString('sv-SE').replace(/-/g, '.');
-
                 doc.addImage(checkmarkBase64, 'PNG', 120, pageHeight - 50, 20, 20);
                 doc.setFontSize(9);
                 doc.setFont('helvetica', 'normal');
@@ -710,19 +708,51 @@
             setupModal();
             document.getElementById('billDate').valueAsDate = new Date();
 
-            document.getElementById('invoice-items').addEventListener('input', (e) => {
+            const invoiceBody = document.getElementById('invoice-items');
+            let draggedItemIndex = null;
+
+            invoiceBody.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('draggable-row')) {
+                    draggedItemIndex = parseInt(e.target.dataset.index);
+                    setTimeout(() => e.target.classList.add('dragging'), 0);
+                }
+            });
+
+            invoiceBody.addEventListener('dragend', (e) => {
+                if (e.target.classList.contains('draggable-row')) {
+                    e.target.classList.remove('dragging');
+                }
+            });
+
+            invoiceBody.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            invoiceBody.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const targetRow = e.target.closest('.draggable-row');
+                if (targetRow && draggedItemIndex !== null) {
+                    const targetIndex = parseInt(targetRow.dataset.index);
+                    const [reorderedItem] = selectedItems.splice(draggedItemIndex, 1);
+                    selectedItems.splice(targetIndex, 0, reorderedItem);
+                    renderInvoice();
+                }
+                draggedItemIndex = null;
+            });
+
+            invoiceBody.addEventListener('input', (e) => {
                 if (e.target.classList.contains('quantity-input')) {
                     const index = e.target.dataset.index;
                     selectedItems[index].quantity = e.target.value;
                 }
             });
 
-            document.getElementById('invoice-items').addEventListener('click', (e) => {
+            invoiceBody.addEventListener('click', (e) => {
                 if (e.target.classList.contains('remove-btn')) {
                     const index = e.target.dataset.index;
                     selectedItems.splice(index, 1);
                     renderInvoice();
-                    renderItemSelection(); // Re-render to update highlights
+                    renderItemSelection();
                 }
             });
 
@@ -736,5 +766,4 @@
     </script>
 </body>
 </html>
-
 
